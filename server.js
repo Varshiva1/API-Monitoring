@@ -1,11 +1,12 @@
 import express from "express";
-// import connectDB from "./src/config/database.js";
+import connectDB from "./src/config/database.js";
+import { startMonitoring } from "./src/services/monitoringService.js";
 import cors from 'cors';
 
 const app = express()
 
 app.use(cors());
-// connectDB();
+connectDB();
 
 
 
@@ -14,7 +15,7 @@ const PORT = process.env.PORT || 4000;
 const server = app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
   // Start monitoring service
-//   startMonitoring();
+  startMonitoring();
 });
 
 // Handle unhandled promise rejections
