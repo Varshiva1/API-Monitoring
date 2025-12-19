@@ -13,7 +13,7 @@ const checkMonitor = async (monitor) => {
     const response = await axios({
       method: monitor.method,
       url: monitor.url,
-      headers: Object.fromEntries(monitor.headers || new Map()),
+      headers: monitor.headers ? (monitor.headers instanceof Map ? Object.fromEntries(monitor.headers) : monitor.headers) : {},
       timeout: monitor.timeout * 1000,
       validateStatus: () => true, // Don't throw on any status code
     });

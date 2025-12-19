@@ -21,7 +21,7 @@ const config = {
     },
     
     alertEmail: process.env.ALERT_EMAIL,
-    // slackWebhook: process.env.SLACK_WEBHOOK_URL,
+    slackWebhook: process.env.SLACK_WEBHOOK_URL,
     
     // // Environment
     // isDevelopment: process.env.NODE_ENV === 'development',

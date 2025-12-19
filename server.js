@@ -1,11 +1,12 @@
-import express from "express";
+import dotenv from 'dotenv';
 import connectDB from "./src/config/database.js";
+import app from "./src/app.js";
 import { startMonitoring } from "./src/services/monitoringService.js";
-import cors from 'cors';
 
-const app = express()
+// Load environment variables
+dotenv.config();
 
-app.use(cors());
+// Connect to database
 connectDB();
 
 
