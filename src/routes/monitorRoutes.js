@@ -5,7 +5,7 @@ import {
   getMonitor,
   updateMonitor,
   deleteMonitor,
-  getMonitorStats,
+  deleteAllMonitors,
   toggleMonitor,
 } from '../controllers/monitorController.js';
 import { protect } from '../middleware/auth.js';
@@ -14,8 +14,7 @@ import { validate } from '../middleware/validator.js';
 
 const router = express.Router();
 
-// Validation rules
-const createMonitorValidation = [
+const monitorValidation = [
   body('name').trim().notEmpty().withMessage('Monitor name is required'),
   body('url').isURL().withMessage('Valid URL is required'),
   body('method').optional().isIn(['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD']).withMessage('Invalid HTTP method'),
@@ -24,27 +23,19 @@ const createMonitorValidation = [
   body('expectedStatusCode').optional().isInt({ min: 100, max: 599 }).withMessage('Invalid status code'),
 ];
 
-const updateMonitorValidation = [
-  body('name').optional().trim().notEmpty().withMessage('Monitor name cannot be empty'),
-  body('url').optional().isURL().withMessage('Valid URL is required'),
-  body('method').optional().isIn(['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD']).withMessage('Invalid HTTP method'),
-  body('interval').optional().isInt({ min: 1 }).withMessage('Interval must be at least 1 minute'),
-  body('timeout').optional().isInt({ min: 5, max: 120 }).withMessage('Timeout must be between 5 and 120 seconds'),
-];
-
-// All routes require authentication
 router.use(protect);
 
 router.route('/')
   .get(getMonitors)
-  .post(createMonitorValidation, validate, createMonitor);
+  .post(monitorValidation, validate, createMonitor);
+
+router.post('/delete-all', deleteAllMonitors);
 
 router.route('/:id')
   .get(getMonitor)
-  .put(updateMonitorValidation, validate, updateMonitor)
+  .post(monitorValidation, validate, updateMonitor)
   .delete(deleteMonitor);
 
-router.get('/:id/stats', getMonitorStats);
-router.patch('/:id/toggle', toggleMonitor);
+router.post('/:id/toggle', toggleMonitor);
 
 export default router;

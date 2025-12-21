@@ -62,7 +62,7 @@ export const getMonitor = async (req, res, next) => {
     }
 
     // Make sure user owns monitor
-    if (monitor.user.toString() !== req.user.id && req.user.role !== 'admin') {
+    if (monitor.user.toString() !== req.user.id) {
       return res.status(403).json({
         success: false,
         message: 'Not authorized to access this monitor',
@@ -78,8 +78,9 @@ export const getMonitor = async (req, res, next) => {
   }
 };
 
-//   Update monitor
-
+// @desc    Update monitor
+// @route   POST /api/monitors/:id
+// @access  Private
 export const updateMonitor = async (req, res, next) => {
   try {
     let monitor = await Monitor.findById(req.params.id);
@@ -92,7 +93,7 @@ export const updateMonitor = async (req, res, next) => {
     }
 
     // Make sure user owns monitor
-    if (monitor.user.toString() !== req.user.id && req.user.role !== 'admin') {
+    if (monitor.user.toString() !== req.user.id) {
       return res.status(403).json({
         success: false,
         message: 'Not authorized to update this monitor',
@@ -121,8 +122,9 @@ export const updateMonitor = async (req, res, next) => {
   }
 };
 
-// Delete monitor
-
+// @desc    Delete monitor
+// @route   DELETE /api/monitors/:id
+// @access  Private
 export const deleteMonitor = async (req, res, next) => {
   try {
     const monitor = await Monitor.findById(req.params.id);
@@ -135,7 +137,7 @@ export const deleteMonitor = async (req, res, next) => {
     }
 
     // Make sure user owns monitor
-    if (monitor.user.toString() !== req.user.id && req.user.role !== 'admin') {
+    if (monitor.user.toString() !== req.user.id) {
       return res.status(403).json({
         success: false,
         message: 'Not authorized to delete this monitor',
@@ -157,64 +159,41 @@ export const deleteMonitor = async (req, res, next) => {
   }
 };
 
-//   Get monitor statistics
-
-export const getMonitorStats = async (req, res, next) => {
+// @desc    Delete all monitors
+// @route   POST /api/monitors/delete-all
+// @access  Private
+export const deleteAllMonitors = async (req, res, next) => {
   try {
-    const monitor = await Monitor.findById(req.params.id);
-
-    if (!monitor) {
-      return res.status(404).json({
-        success: false,
-        message: 'Monitor not found',
+    const userMonitors = await Monitor.find({ user: req.user.id });
+    
+    if (userMonitors.length === 0) {
+      return res.status(200).json({
+        success: true,
+        message: 'No monitors found to delete',
+        deletedCount: 0,
       });
     }
 
-    // Make sure user owns monitor
-    if (monitor.user.toString() !== req.user.id && req.user.role !== 'admin') {
-      return res.status(403).json({
-        success: false,
-        message: 'Not authorized to access this monitor',
-      });
-    }
+    const monitorIds = userMonitors.map(m => m._id);
 
-    // Get incidents for this monitor
-    const [incidents, totalIncidents, openIncidents] = await Promise.all([
-      Incident.find({ monitor: monitor._id })
-        .sort('-startTime')
-        .limit(10),
-      Incident.countDocuments({ monitor: monitor._id }),
-      Incident.countDocuments({ monitor: monitor._id, status: 'open' }),
+    const [deleteResult] = await Promise.all([
+      Monitor.deleteMany({ _id: { $in: monitorIds } }),
+      Incident.deleteMany({ monitor: { $in: monitorIds } }),
     ]);
-
-    const stats = {
-      monitor: {
-        name: monitor.name,
-        url: monitor.url,
-        status: monitor.status,
-        uptime: monitor.uptime,
-        lastChecked: monitor.lastChecked,
-        lastResponseTime: monitor.lastResponseTime,
-        uptimeString: monitor.getUptimeString(),
-      },
-      incidents: {
-        total: totalIncidents,
-        open: openIncidents,
-        recent: incidents,
-      },
-    };
 
     res.status(200).json({
       success: true,
-      data: stats,
+      message: `Successfully deleted ${deleteResult.deletedCount} monitor(s)`,
+      deletedCount: deleteResult.deletedCount,
     });
   } catch (error) {
     next(error);
   }
 };
 
-//  Toggle monitor active status
-
+// @desc    Toggle monitor active status
+// @route   POST /api/monitors/:id/toggle
+// @access  Private
 export const toggleMonitor = async (req, res, next) => {
   try {
     const monitor = await Monitor.findById(req.params.id);
@@ -227,7 +206,7 @@ export const toggleMonitor = async (req, res, next) => {
     }
 
     // Make sure user owns monitor
-    if (monitor.user.toString() !== req.user.id && req.user.role !== 'admin') {
+    if (monitor.user.toString() !== req.user.id) {
       return res.status(403).json({
         success: false,
         message: 'Not authorized to update this monitor',

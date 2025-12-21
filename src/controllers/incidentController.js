@@ -1,10 +1,12 @@
 import Incident from '../models/Incident.js';
 import Monitor from '../models/Monitor.js';
 
-
+// @desc    Get all incidents
+// @route   GET /api/incidents
+// @access  Private
 export const getIncidents = async (req, res, next) => {
   try {
-    const { status, monitorId, limit = 50 } = req.query;
+    const { status, monitorId, limit = 50, days } = req.query;
     
     let query = {};
     
@@ -19,7 +21,7 @@ export const getIncidents = async (req, res, next) => {
       }
       
       // Check if user owns the monitor
-      if (monitor.user.toString() !== req.user.id && req.user.role !== 'admin') {
+      if (monitor.user.toString() !== req.user.id) {
         return res.status(403).json({
           success: false,
           message: 'Not authorized',
@@ -39,6 +41,13 @@ export const getIncidents = async (req, res, next) => {
       query.status = status;
     }
 
+    // Filter by days if provided (recent incidents)
+    if (days) {
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - parseInt(days));
+      query.startTime = { $gte: startDate };
+    }
+
     const incidents = await Incident.find(query)
       .populate('monitor', 'name url')
       .populate('resolvedBy', 'name email')
@@ -55,7 +64,9 @@ export const getIncidents = async (req, res, next) => {
   }
 };
 
-//  Get single incident
+// @desc    Get single incident
+// @route   GET /api/incidents/:id
+// @access  Private
 export const getIncident = async (req, res, next) => {
   try {
     const incident = await Incident.findById(req.params.id)
@@ -70,7 +81,7 @@ export const getIncident = async (req, res, next) => {
     }
 
     // Check authorization
-    if (incident.monitor.user.toString() !== req.user.id && req.user.role !== 'admin') {
+    if (incident.monitor.user.toString() !== req.user.id) {
       return res.status(403).json({
         success: false,
         message: 'Not authorized to access this incident',
@@ -86,7 +97,9 @@ export const getIncident = async (req, res, next) => {
   }
 };
 
-//  Acknowledge incident
+// @desc    Acknowledge incident
+// @route   POST /api/incidents/:id/acknowledge
+// @access  Private
 export const acknowledgeIncident = async (req, res, next) => {
   try {
     const incident = await Incident.findById(req.params.id)
@@ -100,7 +113,7 @@ export const acknowledgeIncident = async (req, res, next) => {
     }
 
     // Check authorization
-    if (incident.monitor.user.toString() !== req.user.id && req.user.role !== 'admin') {
+    if (incident.monitor.user.toString() !== req.user.id) {
       return res.status(403).json({
         success: false,
         message: 'Not authorized to acknowledge this incident',
@@ -127,8 +140,9 @@ export const acknowledgeIncident = async (req, res, next) => {
   }
 };
 
-//  Resolve incident
-
+// @desc    Resolve incident
+// @route   POST /api/incidents/:id/resolve
+// @access  Private
 export const resolveIncident = async (req, res, next) => {
   try {
     const incident = await Incident.findById(req.params.id)
@@ -142,7 +156,7 @@ export const resolveIncident = async (req, res, next) => {
     }
 
     // Check authorization
-    if (incident.monitor.user.toString() !== req.user.id && req.user.role !== 'admin') {
+    if (incident.monitor.user.toString() !== req.user.id) {
       return res.status(403).json({
         success: false,
         message: 'Not authorized to resolve this incident',
@@ -164,96 +178,6 @@ export const resolveIncident = async (req, res, next) => {
       success: true,
       data: incident,
       message: 'Incident resolved successfully',
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// Get incident statistics
-
-export const getIncidentStats = async (req, res, next) => {
-  try {
-    // Get all monitors belonging to user
-    const userMonitors = await Monitor.find({ user: req.user.id });
-    const monitorIds = userMonitors.map(m => m._id);
-
-    const [
-      totalIncidents,
-      openIncidents,
-      resolvedIncidents,
-      acknowledgedIncidents,
-      resolvedWithDuration,
-      incidentsByType,
-    ] = await Promise.all([
-      Incident.countDocuments({ monitor: { $in: monitorIds } }),
-      Incident.countDocuments({ monitor: { $in: monitorIds }, status: 'open' }),
-      Incident.countDocuments({ monitor: { $in: monitorIds }, status: 'resolved' }),
-      Incident.countDocuments({ monitor: { $in: monitorIds }, status: 'acknowledged' }),
-      Incident.find({
-        monitor: { $in: monitorIds },
-        status: 'resolved',
-        duration: { $exists: true },
-      }).select('duration'),
-      Incident.aggregate([
-        { $match: { monitor: { $in: monitorIds } } },
-        { $group: { _id: '$type', count: { $sum: 1 } } },
-      ]),
-    ]);
-
-    // Calculate average resolution time
-    let avgResolutionTime = 0;
-    if (resolvedWithDuration.length > 0) {
-      const totalDuration = resolvedWithDuration.reduce((sum, inc) => sum + inc.duration, 0);
-      avgResolutionTime = Math.round(totalDuration / resolvedWithDuration.length);
-    }
-
-    const stats = {
-      total: totalIncidents,
-      open: openIncidents,
-      resolved: resolvedIncidents,
-      acknowledged: acknowledgedIncidents,
-      avgResolutionTime: `${avgResolutionTime} minutes`,
-      byType: incidentsByType.reduce((acc, item) => {
-        acc[item._id] = item.count;
-        return acc;
-      }, {}),
-    };
-
-    res.status(200).json({
-      success: true,
-      data: stats,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// Get recent incidents
-
-export const getRecentIncidents = async (req, res, next) => {
-  try {
-    const { days = 7 } = req.query;
-    
-    const userMonitors = await Monitor.find({ user: req.user.id });
-    const monitorIds = userMonitors.map(m => m._id);
-
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - parseInt(days));
-
-    const incidents = await Incident.find({
-      monitor: { $in: monitorIds },
-      startTime: { $gte: startDate },
-    })
-      .populate('monitor', 'name url')
-      .sort('-startTime')
-      .limit(20);
-
-    res.status(200).json({
-      success: true,
-      count: incidents.length,
-      data: incidents,
-      period: `Last ${days} days`,
     });
   } catch (error) {
     next(error);
