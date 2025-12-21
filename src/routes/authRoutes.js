@@ -1,5 +1,5 @@
 import express from 'express';
-import { register, login, getMe, updatePassword } from '../controllers/authController.js';
+import { register, login, getMe, updatePassword, deleteUser } from '../controllers/authController.js';
 import { protect } from '../middleware/auth.js';
 import { body } from 'express-validator';
 import { validate } from '../middleware/validator.js';
@@ -23,10 +23,15 @@ const updatePasswordValidation = [
   body('newPassword').isLength({ min: 6 }).withMessage('New password must be at least 6 characters'),
 ];
 
+const deleteUserValidation = [
+  body('password').notEmpty().withMessage('Password is required to confirm account deletion'),
+];
+
 // Routes
 router.post('/register', registerValidation, validate, register);
 router.post('/login', loginValidation, validate, login);
 router.get('/me', protect, getMe);
-router.put('/updatepassword', protect, updatePasswordValidation, validate, updatePassword);
+router.post('/updatepassword', protect, updatePasswordValidation, validate, updatePassword);
+router.delete('/delete', protect, deleteUserValidation, validate, deleteUser);
 
 export default router;

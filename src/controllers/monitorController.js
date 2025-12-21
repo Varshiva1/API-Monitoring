@@ -8,7 +8,7 @@ export const createMonitor = async (req, res, next) => {
   try {
     const monitorData = {
       ...req.body,
-      user: req.user.id,
+      user: req.user._id || req.user.id,
     };
 
     const monitor = await Monitor.create(monitorData);
@@ -30,7 +30,9 @@ export const getMonitors = async (req, res, next) => {
   try {
     const { status, isActive } = req.query;
     
-    const query = { user: req.user.id };
+    // Use the user's MongoDB _id for querying
+    const userId = req.user._id || req.user.id;
+    const query = { user: userId };
     
     if (status) query.status = status;
     if (isActive !== undefined) query.isActive = isActive === 'true';
@@ -62,7 +64,7 @@ export const getMonitor = async (req, res, next) => {
     }
 
     // Make sure user owns monitor
-    if (monitor.user.toString() !== req.user.id) {
+    if (monitor.user.toString() !== (req.user._id || req.user.id).toString()) {
       return res.status(403).json({
         success: false,
         message: 'Not authorized to access this monitor',
@@ -93,7 +95,7 @@ export const updateMonitor = async (req, res, next) => {
     }
 
     // Make sure user owns monitor
-    if (monitor.user.toString() !== req.user.id) {
+    if (monitor.user.toString() !== (req.user._id || req.user.id).toString()) {
       return res.status(403).json({
         success: false,
         message: 'Not authorized to update this monitor',
@@ -137,7 +139,7 @@ export const deleteMonitor = async (req, res, next) => {
     }
 
     // Make sure user owns monitor
-    if (monitor.user.toString() !== req.user.id) {
+    if (monitor.user.toString() !== (req.user._id || req.user.id).toString()) {
       return res.status(403).json({
         success: false,
         message: 'Not authorized to delete this monitor',
@@ -164,7 +166,7 @@ export const deleteMonitor = async (req, res, next) => {
 // @access  Private
 export const deleteAllMonitors = async (req, res, next) => {
   try {
-    const userMonitors = await Monitor.find({ user: req.user.id });
+    const userMonitors = await Monitor.find({ user: req.user._id || req.user.id });
     
     if (userMonitors.length === 0) {
       return res.status(200).json({
@@ -206,7 +208,7 @@ export const toggleMonitor = async (req, res, next) => {
     }
 
     // Make sure user owns monitor
-    if (monitor.user.toString() !== req.user.id) {
+    if (monitor.user.toString() !== (req.user._id || req.user.id).toString()) {
       return res.status(403).json({
         success: false,
         message: 'Not authorized to update this monitor',

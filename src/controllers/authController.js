@@ -1,5 +1,7 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
+import Monitor from '../models/Monitor.js';
+import Incident from '../models/Incident.js';
 
 // Generate JWT Token
 const generateToken = (id) => {
@@ -33,7 +35,6 @@ export const register = async (req, res, next) => {
         id: user._id,
         name: user.name,
         email: user.email,
-        role: user.role,
       },
     });
   } catch (error) {
@@ -84,7 +85,6 @@ export const login = async (req, res, next) => {
         id: user._id,
         name: user.name,
         email: user.email,
-        role: user.role,
       },
     });
   } catch (error) {
@@ -106,8 +106,9 @@ export const getMe = async (req, res, next) => {
   }
 };
 
-//  Update user password
-
+// @desc    Update user password
+// @route   POST /api/auth/updatepassword
+// @access  Private
 export const updatePassword = async (req, res, next) => {
   try {
     const { currentPassword, newPassword } = req.body;
@@ -139,6 +140,51 @@ export const updatePassword = async (req, res, next) => {
       success: true,
       token,
       message: 'Password updated successfully',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Delete user account
+// @route   DELETE /api/auth/delete
+// @access  Private
+export const deleteUser = async (req, res, next) => {
+  try {
+    const { password } = req.body;
+
+    if (!password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide password to confirm account deletion',
+      });
+    }
+
+    const user = await User.findById(req.user.id).select('+password');
+
+    // Verify password
+    const isMatch = await user.comparePassword(password);
+    if (!isMatch) {
+      return res.status(401).json({
+        success: false,
+        message: 'Incorrect password',
+      });
+    }
+
+    // Get user's monitors
+    const userMonitors = await Monitor.find({ user: user._id });
+    const monitorIds = userMonitors.map(m => m._id);
+
+    // Delete user's monitors, incidents, and user account
+    await Promise.all([
+      Monitor.deleteMany({ _id: { $in: monitorIds } }),
+      Incident.deleteMany({ monitor: { $in: monitorIds } }),
+      user.deleteOne(),
+    ]);
+
+    res.status(200).json({
+      success: true,
+      message: 'User account and all associated data deleted successfully',
     });
   } catch (error) {
     next(error);
