@@ -8,9 +8,7 @@ const generateToken = (id) => {
   });
 };
 
-// @desc    Register user
-// @route   POST /api/auth/register
-// @access  Public
+// Register user
 export const register = async (req, res, next) => {
   try {
     const { name, email, password } = req.body;
@@ -43,9 +41,8 @@ export const register = async (req, res, next) => {
   }
 };
 
-// @desc    Login user
-// @route   POST /api/auth/login
-// @access  Public
+//  Login user
+
 export const login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
@@ -95,9 +92,7 @@ export const login = async (req, res, next) => {
   }
 };
 
-// @desc    Get current logged in user
-// @route   GET /api/auth/me
-// @access  Private
+// Get current logged in user
 export const getMe = async (req, res, next) => {
   try {
     const user = await User.findById(req.user.id);
@@ -111,9 +106,8 @@ export const getMe = async (req, res, next) => {
   }
 };
 
-// @desc    Update user password
-// @route   PUT /api/auth/updatepassword
-// @access  Private
+//  Update user password
+
 export const updatePassword = async (req, res, next) => {
   try {
     const { currentPassword, newPassword } = req.body;

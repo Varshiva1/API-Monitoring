@@ -1,8 +1,7 @@
 import Incident from '../models/Incident.js';
 import Monitor from '../models/Monitor.js';
 
-// @route   GET /api/incidents
-// @access  Private
+
 export const getIncidents = async (req, res, next) => {
   try {
     const { status, monitorId, limit = 50 } = req.query;
@@ -56,9 +55,7 @@ export const getIncidents = async (req, res, next) => {
   }
 };
 
-// @desc    Get single incident
-// @route   GET /api/incidents/:id
-// @access  Private
+//  Get single incident
 export const getIncident = async (req, res, next) => {
   try {
     const incident = await Incident.findById(req.params.id)
@@ -89,9 +86,7 @@ export const getIncident = async (req, res, next) => {
   }
 };
 
-// @desc    Acknowledge incident
-// @route   PUT /api/incidents/:id/acknowledge
-// @access  Private
+//  Acknowledge incident
 export const acknowledgeIncident = async (req, res, next) => {
   try {
     const incident = await Incident.findById(req.params.id)
@@ -132,9 +127,8 @@ export const acknowledgeIncident = async (req, res, next) => {
   }
 };
 
-// @desc    Resolve incident
-// @route   PUT /api/incidents/:id/resolve
-// @access  Private
+//  Resolve incident
+
 export const resolveIncident = async (req, res, next) => {
   try {
     const incident = await Incident.findById(req.params.id)
@@ -176,9 +170,8 @@ export const resolveIncident = async (req, res, next) => {
   }
 };
 
-// @desc    Get incident statistics
-// @route   GET /api/incidents/stats
-// @access  Private
+// Get incident statistics
+
 export const getIncidentStats = async (req, res, next) => {
   try {
     // Get all monitors belonging to user
@@ -236,9 +229,8 @@ export const getIncidentStats = async (req, res, next) => {
   }
 };
 
-// @desc    Get recent incidents
-// @route   GET /api/incidents/recent
-// @access  Private
+// Get recent incidents
+
 export const getRecentIncidents = async (req, res, next) => {
   try {
     const { days = 7 } = req.query;

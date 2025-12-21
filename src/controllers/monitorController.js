@@ -78,9 +78,8 @@ export const getMonitor = async (req, res, next) => {
   }
 };
 
-// @desc    Update monitor
-// @route   PUT /api/monitors/:id
-// @access  Private
+//   Update monitor
+
 export const updateMonitor = async (req, res, next) => {
   try {
     let monitor = await Monitor.findById(req.params.id);
@@ -122,9 +121,8 @@ export const updateMonitor = async (req, res, next) => {
   }
 };
 
-// @desc    Delete monitor
-// @route   DELETE /api/monitors/:id
-// @access  Private
+// Delete monitor
+
 export const deleteMonitor = async (req, res, next) => {
   try {
     const monitor = await Monitor.findById(req.params.id);
@@ -159,9 +157,8 @@ export const deleteMonitor = async (req, res, next) => {
   }
 };
 
-// @desc    Get monitor statistics
-// @route   GET /api/monitors/:id/stats
-// @access  Private
+//   Get monitor statistics
+
 export const getMonitorStats = async (req, res, next) => {
   try {
     const monitor = await Monitor.findById(req.params.id);
@@ -216,9 +213,8 @@ export const getMonitorStats = async (req, res, next) => {
   }
 };
 
-// @desc    Toggle monitor active status
-// @route   PATCH /api/monitors/:id/toggle
-// @access  Private
+//  Toggle monitor active status
+
 export const toggleMonitor = async (req, res, next) => {
   try {
     const monitor = await Monitor.findById(req.params.id);
