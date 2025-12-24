@@ -418,10 +418,6 @@ API-Monitoring/
 8. **Security** - JWT auth, bcrypt, input validation
 9. **Error Handling** - Comprehensive middleware
 
-## 🧪 Testing
-
-Import the Postman collection (`API-Monitoring-Complete.postman_collection.json`) for easy API testing.
-
 ## 📄 License
 
 MIT License
