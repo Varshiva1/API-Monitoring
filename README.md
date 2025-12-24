@@ -1,15 +1,16 @@
-# API Monitoring & Status Page System (ES6)
+# API Monitoring System
 
-A comprehensive backend system for monitoring APIs, tracking uptime, managing incidents, and sending alerts. Built with **Node.js ES6 Modules**, Express, MongoDB, and following MVC architecture pattern.
+A comprehensive backend system for monitoring APIs, tracking uptime, managing incidents, and sending email alerts. Built with **Node.js ES6 Modules**, Express, MongoDB, and following MVC architecture pattern.
 
 ## 🚀 Features
 
 - ✅ **Real-time API Monitoring** - Automated health checks at custom intervals
 - ✅ **Uptime Tracking** - Calculate and display uptime percentages
 - ✅ **Incident Management** - Automatic incident creation and resolution
-- ✅ **Multi-channel Alerts** - Email and Slack notifications
+- ✅ **Email Alerts** - Email notifications for API failures
 - ✅ **Response Time Tracking** - Monitor API performance
 - ✅ **JWT Authentication** - Secure user authentication
+- ✅ **Role-Based Access Control** - Admin and user roles with different permissions
 - ✅ **RESTful API** - Clean and well-documented endpoints
 - ✅ **MVC Architecture** - Organized and maintainable code structure
 - ✅ **ES6 Modules** - Modern JavaScript with import/export
@@ -24,42 +25,18 @@ A comprehensive backend system for monitoring APIs, tracking uptime, managing in
 
 ## 🛠️ Installation
 
-### 1. Clone Repository (or create new project)
+### 1. Clone Repository
 ```bash
-mkdir api-monitoring-system
-cd api-monitoring-system
-npm init -y
+git clone <repository-url>
+cd API-Monitoring
+npm install
 ```
 
-### 2. Install Dependencies
-```bash
-npm install express mongoose dotenv bcryptjs jsonwebtoken axios node-cron nodemailer express-validator cors
-npm install --save-dev nodemon
-```
-
-### 3. Update package.json
-
-Add these to your `package.json`:
-```json
-{
-  "type": "module",
-  "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js"
-  }
-}
-```
-
-### 4. Create Project Structure
-```bash
-mkdir -p src/{config,models,controllers,routes,middleware,services,utils}
-```
-
-### 5. Environment Setup
+### 2. Environment Setup
 
 Create a `.env` file in the root directory:
 ```env
-PORT=5000
+PORT=4000
 MONGODB_URI=mongodb://localhost:27017/api-monitor
 JWT_SECRET=your_super_secret_jwt_key_change_this_in_production
 JWT_EXPIRE=7d
@@ -73,7 +50,6 @@ EMAIL_FROM=noreply@apimonitor.com
 
 # Alert Configuration
 ALERT_EMAIL=alerts@yourdomain.com
-SLACK_WEBHOOK_URL=https://hooks.slack.com/services/YOUR/WEBHOOK/URL
 
 # CORS (Optional)
 CORS_ORIGIN=*
@@ -81,7 +57,7 @@ CORS_ORIGIN=*
 NODE_ENV=development
 ```
 
-### 6. Start MongoDB
+### 3. Start MongoDB
 ```bash
 # Using MongoDB locally
 mongod
@@ -90,7 +66,7 @@ mongod
 docker run -d -p 27017:27017 --name mongodb mongo:latest
 ```
 
-### 7. Run the Application
+### 4. Run the Application
 ```bash
 # Development mode (with auto-reload)
 npm run dev
@@ -99,13 +75,13 @@ npm run dev
 npm start
 ```
 
-The server will start on `http://localhost:5000`
+The server will start on `http://localhost:4000`
 
 ## 📚 API Documentation
 
 ### Base URL
 ```
-http://localhost:5000/api
+http://localhost:4000/api
 ```
 
 ### Health Check
@@ -144,6 +120,29 @@ GET /api/auth/me
 Authorization: Bearer <token>
 ```
 
+#### Update Password
+```http
+POST /api/auth/updatepassword
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "currentPassword": "oldpassword",
+  "newPassword": "newpassword123"
+}
+```
+
+#### Delete User (Self)
+```http
+DELETE /api/auth/delete
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "password": "password123"
+}
+```
+
 ### Monitor Endpoints
 
 #### Create Monitor
@@ -160,27 +159,50 @@ Content-Type: application/json
   "timeout": 30,
   "expectedStatusCode": 200,
   "alertChannels": {
-    "email": true,
-    "slack": false
+    "email": true
   }
 }
 ```
 
 #### Get All Monitors
 ```http
-GET /api/monitors
+GET /api/monitors?status=up&isActive=true
 Authorization: Bearer <token>
 ```
 
-#### Get Monitor Statistics
+#### Get Monitor by ID
 ```http
-GET /api/monitors/:id/stats
+GET /api/monitors/:id
+Authorization: Bearer <token>
+```
+
+#### Update Monitor
+```http
+POST /api/monitors/:id
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "name": "Updated Monitor Name",
+  "interval": 10
+}
+```
+
+#### Delete Monitor
+```http
+DELETE /api/monitors/:id
+Authorization: Bearer <token>
+```
+
+#### Delete All Monitors
+```http
+POST /api/monitors/delete-all
 Authorization: Bearer <token>
 ```
 
 #### Toggle Monitor (Pause/Resume)
 ```http
-PATCH /api/monitors/:id/toggle
+POST /api/monitors/:id/toggle
 Authorization: Bearer <token>
 ```
 
@@ -188,59 +210,103 @@ Authorization: Bearer <token>
 
 #### Get All Incidents
 ```http
-GET /api/incidents
+GET /api/incidents?status=open&days=7&limit=50
+Authorization: Bearer <token>
+```
+
+#### Get Incident by ID
+```http
+GET /api/incidents/:id
 Authorization: Bearer <token>
 ```
 
 #### Acknowledge Incident
 ```http
-PUT /api/incidents/:id/acknowledge
+POST /api/incidents/:id/acknowledge
 Authorization: Bearer <token>
 ```
 
 #### Resolve Incident
 ```http
-PUT /api/incidents/:id/resolve
+POST /api/incidents/:id/resolve
 Authorization: Bearer <token>
 ```
 
-#### Get Incident Statistics
+### Admin Endpoints
+
+All admin endpoints require admin role.
+
+#### Create User
 ```http
-GET /api/incidents/stats
-Authorization: Bearer <token>
+POST /api/admin/users
+Authorization: Bearer <admin_token>
+Content-Type: application/json
+
+{
+  "name": "New User",
+  "email": "newuser@example.com",
+  "password": "password123",
+  "role": "user"
+}
 ```
 
-## 🧪 Testing with cURL
-```bash
-# 1. Register
-curl -X POST http://localhost:5000/api/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{"name":"Test User","email":"test@example.com","password":"password123"}'
+#### Get All Users
+```http
+GET /api/admin/users
+Authorization: Bearer <admin_token>
+```
 
-# 2. Login (save the token)
-curl -X POST http://localhost:5000/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"test@example.com","password":"password123"}'
+#### Get User by Email
+```http
+GET /api/admin/users/:email
+Authorization: Bearer <admin_token>
+```
 
-# 3. Create Monitor (replace YOUR_TOKEN)
-curl -X POST http://localhost:5000/api/monitors \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name":"JSONPlaceholder API",
-    "url":"https://jsonplaceholder.typicode.com/posts",
-    "method":"GET",
-    "interval":5,
-    "expectedStatusCode":200
-  }'
+#### Update User Role
+```http
+POST /api/admin/users/:email/role
+Authorization: Bearer <admin_token>
+Content-Type: application/json
 
-# 4. Get All Monitors
-curl -X GET http://localhost:5000/api/monitors \
-  -H "Authorization: Bearer YOUR_TOKEN"
+{
+  "role": "admin"
+}
+```
 
-# 5. Get Monitor Stats
-curl -X GET http://localhost:5000/api/monitors/MONITOR_ID/stats \
-  -H "Authorization: Bearer YOUR_TOKEN"
+#### Delete User by Email
+```http
+DELETE /api/admin/users/:email
+Authorization: Bearer <admin_token>
+```
+
+#### Delete All Users
+```http
+POST /api/admin/users/delete-all
+Authorization: Bearer <admin_token>
+Content-Type: application/json
+
+{
+  "confirm": "DELETE_ALL_USERS",
+  "excludeAdmins": true
+}
+```
+
+#### Get All Monitors (All Users)
+```http
+GET /api/admin/monitors?status=up&isActive=true&userId=xxx
+Authorization: Bearer <admin_token>
+```
+
+#### Get All Incidents (All Users)
+```http
+GET /api/admin/incidents?status=open&monitorId=xxx&userId=xxx&limit=100
+Authorization: Bearer <admin_token>
+```
+
+#### Get Admin Stats
+```http
+GET /api/admin/stats
+Authorization: Bearer <admin_token>
 ```
 
 ## 📧 Email Setup (Gmail)
@@ -259,69 +325,40 @@ EMAIL_PASSWORD=your-16-digit-app-password
 ALERT_EMAIL=your-email@gmail.com
 ```
 
-## 💬 Slack Setup
+## 🔐 Admin Setup
 
-1. Create Incoming Webhook at https://api.slack.com/messaging/webhooks
-2. Copy webhook URL
-3. Update `.env`:
-```env
-SLACK_WEBHOOK_URL=https://hooks.slack.com/services/YOUR/WEBHOOK/URL
+### Creating the First Admin
+
+Since no admin exists initially, you need to manually create the first admin:
+
+**Option 1: MongoDB Compass**
+1. Open MongoDB Compass
+2. Connect to `mongodb://localhost:27017`
+3. Select database: `api-monitor`
+4. Open `users` collection
+5. Find your user and update `role` field to `"admin"`
+
+**Option 2: MongoDB Shell**
+```bash
+mongosh api-monitor
+db.users.updateOne(
+  { email: "your-email@example.com" },
+  { $set: { role: "admin" } }
+)
 ```
 
-## 🚀 Deployment
-
-### Deploy to AWS EC2
-```bash
-# SSH into EC2
-ssh -i your-key.pem ubuntu@your-ec2-ip
-
-# Install Node.js
-curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
-sudo apt-get install -y nodejs
-
-# Install MongoDB
-wget -qO - https://www.mongodb.org/static/pgp/server-6.0.asc | sudo apt-key add -
-echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/6.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-6.0.list
-sudo apt-get update
-sudo apt-get install -y mongodb-org
-sudo systemctl start mongod
-sudo systemctl enable mongod
-
-# Clone repository
-git clone your-repo-url
-cd api-monitoring-system
-npm install
-
-# Setup environment
-nano .env
-# (paste your configuration)
-
-# Install PM2
-npm install -g pm2
-
-# Start application
-pm2 start server.js --name api-monitor
-pm2 startup
-pm2 save
-
-# View logs
-pm2 logs api-monitor
-```
-
-### Deploy to Heroku
-```bash
-heroku login
-heroku create your-app-name
-heroku addons:create mongolab:sandbox
-heroku config:set JWT_SECRET=your-secret
-heroku config:set NODE_ENV=production
-git push heroku main
-heroku logs --tail
+After creating the first admin, you can promote other users via the API:
+```http
+POST /api/admin/users/:email/role
+Authorization: Bearer <admin_token>
+{
+  "role": "admin"
+}
 ```
 
 ## 🏗️ Project Structure
 ```
-api-monitoring-system/
+API-Monitoring/
 ├── src/
 │   ├── config/
 │   │   ├── database.js          # MongoDB connection
@@ -332,26 +369,23 @@ api-monitoring-system/
 │   │   └── Incident.js           # Incident model
 │   ├── controllers/
 │   │   ├── authController.js     # Auth logic
-│   │   ├── monitorController.js  # Monitor CRUD
-│   │   └── incidentController.js # Incident management
+│   │   ├── monitorController.js   # Monitor CRUD
+│   │   ├── incidentController.js # Incident management
+│   │   └── adminController.js     # Admin operations
 │   ├── routes/
 │   │   ├── authRoutes.js         # Auth routes
 │   │   ├── monitorRoutes.js      # Monitor routes
-│   │   └── incidentRoutes.js     # Incident routes
+│   │   ├── incidentRoutes.js    # Incident routes
+│   │   └── adminRoutes.js        # Admin routes
 │   ├── middleware/
 │   │   ├── auth.js               # JWT authentication
 │   │   ├── errorHandler.js       # Error handling
 │   │   └── validator.js          # Request validation
 │   ├── services/
 │   │   ├── monitoringService.js  # Core monitoring logic
-│   │   ├── alertService.js       # Alert notifications
 │   │   └── emailService.js       # Email sending
-│   ├── utils/
-│   │   ├── logger.js             # Logging utility
-│   │   └── helpers.js            # Helper functions
 │   └── app.js                    # Express app setup
 ├── .env                          # Environment variables
-├── .gitignore                    # Git ignore file
 ├── package.json                  # Dependencies
 ├── README.md                     # Documentation
 └── server.js                     # Entry point
@@ -372,21 +406,21 @@ api-monitoring-system/
 - ✅ Promise.allSettled()
 - ✅ Array Methods (map, filter, reduce)
 
-## 📝 Resume Talking Points
+## 📝 Key Features
 
 1. **Modern JavaScript** - Built with ES6 modules and latest features
-2. **Cron Jobs** - Automated API health checks every 5 minutes
+2. **Automated Monitoring** - Cron jobs for API health checks
 3. **Incident Management** - Open → Acknowledged → Resolved lifecycle
-4. **Multi-channel Alerts** - Email and Slack notifications
-5. **Performance** - Batch processing, database indexes
-6. **Architecture** - Clean MVC with services layer
-7. **Security** - JWT auth, bcrypt, input validation
-8. **Error Handling** - Comprehensive middleware
-9. **Production Ready** - PM2, graceful shutdown, logging
+4. **Email Alerts** - Automatic notifications for API failures
+5. **Role-Based Access** - Admin and user roles with different permissions
+6. **Performance** - Batch processing, database indexes
+7. **Architecture** - Clean MVC with services layer
+8. **Security** - JWT auth, bcrypt, input validation
+9. **Error Handling** - Comprehensive middleware
 
-## 🤝 Contributing
+## 🧪 Testing
 
-Fork the project and submit pull requests!
+Import the Postman collection (`API-Monitoring-Complete.postman_collection.json`) for easy API testing.
 
 ## 📄 License
 

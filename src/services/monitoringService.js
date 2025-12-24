@@ -64,12 +64,17 @@ const checkMonitor = async (monitor) => {
         });
 
         if (!existingIncident) {
+          console.log(`🚨 Creating incident for ${monitor.name} - Threshold reached!`);
           await createIncident(monitor, 'status_code_mismatch', {
             statusCode,
             responseTime,
             expectedStatusCode: monitor.expectedStatusCode,
           });
+        } else {
+          console.log(`ℹ️  Incident already exists for ${monitor.name}`);
         }
+      } else {
+        console.log(`⏳ ${monitor.name} - Waiting for ${config.downtimeThreshold - monitor.consecutiveFailures} more failure(s) before creating incident`);
       }
     }
 
@@ -84,6 +89,8 @@ const checkMonitor = async (monitor) => {
     monitor.uptime.failedChecks += 1;
     monitor.consecutiveFailures += 1;
 
+    console.log(`⚠️  ${monitor.name} - Consecutive failures: ${monitor.consecutiveFailures}/${config.downtimeThreshold}`);
+
     if (monitor.consecutiveFailures >= config.downtimeThreshold) {
       monitor.status = 'down';
 
@@ -93,10 +100,15 @@ const checkMonitor = async (monitor) => {
       });
 
       if (!existingIncident) {
+        console.log(`🚨 Creating incident for ${monitor.name} - Threshold reached!`);
         await createIncident(monitor, 'timeout', {
           errorMessage: error.message,
         });
+      } else {
+        console.log(`ℹ️  Incident already exists for ${monitor.name}`);
       }
+    } else {
+      console.log(`⏳ ${monitor.name} - Waiting for ${config.downtimeThreshold - monitor.consecutiveFailures} more failure(s) before creating incident`);
     }
 
     monitor.calculateUptime();
@@ -115,14 +127,22 @@ const createIncident = async (monitor, type, details) => {
       details,
     });
 
+    console.log(`✅ Incident #${incident._id} created for ${monitor.name} - Type: ${type}`);
+
+    // Check if email alerts are enabled
+    if (!monitor.alertChannels || !monitor.alertChannels.email) {
+      console.warn(`⚠️  Email alerts are disabled for ${monitor.name}. Enable alertChannels.email to receive notifications.`);
+    }
+
     // Send alerts
     await alertService.sendAlert(monitor, incident);
 
-    console.log(`⚠️  Incident created for ${monitor.name} - Type: ${type}`);
+    console.log(`📧 Alert sent for ${monitor.name}`);
     
     return incident;
   } catch (error) {
-    console.error(`Error creating incident: ${error.message}`);
+    console.error(`❌ Error creating incident: ${error.message}`);
+    console.error(error.stack);
   }
 };
 

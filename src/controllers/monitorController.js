@@ -1,9 +1,8 @@
 import Monitor from '../models/Monitor.js';
 import Incident from '../models/Incident.js';
 
-// @desc    Create new monitor
-// @route   POST /api/monitors
-// @access  Private
+//   Create new monitor
+
 export const createMonitor = async (req, res, next) => {
   try {
     const monitorData = {
@@ -23,9 +22,8 @@ export const createMonitor = async (req, res, next) => {
   }
 };
 
-// @desc    Get all monitors
-// @route   GET /api/monitors
-// @access  Private
+//  Get all monitors
+
 export const getMonitors = async (req, res, next) => {
   try {
     const { status, isActive } = req.query;
@@ -49,9 +47,8 @@ export const getMonitors = async (req, res, next) => {
   }
 };
 
-// @desc    Get single monitor
-// @route   GET /api/monitors/:id
-// @access  Private
+//   Get single monitor
+
 export const getMonitor = async (req, res, next) => {
   try {
     const monitor = await Monitor.findById(req.params.id);
@@ -80,9 +77,8 @@ export const getMonitor = async (req, res, next) => {
   }
 };
 
-// @desc    Update monitor
-// @route   POST /api/monitors/:id
-// @access  Private
+//  Update monitor
+
 export const updateMonitor = async (req, res, next) => {
   try {
     let monitor = await Monitor.findById(req.params.id);
@@ -124,9 +120,8 @@ export const updateMonitor = async (req, res, next) => {
   }
 };
 
-// @desc    Delete monitor
-// @route   DELETE /api/monitors/:id
-// @access  Private
+//    Delete monitor
+
 export const deleteMonitor = async (req, res, next) => {
   try {
     const monitor = await Monitor.findById(req.params.id);
@@ -161,9 +156,8 @@ export const deleteMonitor = async (req, res, next) => {
   }
 };
 
-// @desc    Delete all monitors
-// @route   POST /api/monitors/delete-all
-// @access  Private
+//  Delete all monitors
+
 export const deleteAllMonitors = async (req, res, next) => {
   try {
     const userMonitors = await Monitor.find({ user: req.user._id || req.user.id });
@@ -193,9 +187,8 @@ export const deleteAllMonitors = async (req, res, next) => {
   }
 };
 
-// @desc    Toggle monitor active status
-// @route   POST /api/monitors/:id/toggle
-// @access  Private
+//  Toggle monitor active status
+
 export const toggleMonitor = async (req, res, next) => {
   try {
     const monitor = await Monitor.findById(req.params.id);

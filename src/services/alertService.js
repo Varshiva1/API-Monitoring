@@ -157,7 +157,7 @@ const sendEmailRecovery = async (monitor, incident) => {
   }
 };
 
-// Send Slack recovery notification
+
 // const sendSlackRecovery = async (monitor, incident) => {
 //   const message = {
 //     text: `✅ Monitor Recovered: ${monitor.name}`,

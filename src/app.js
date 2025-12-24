@@ -10,6 +10,7 @@ dotenv.config();
 import authRoutes from './routes/authRoutes.js';
 import monitorRoutes from './routes/monitorRoutes.js';
 import incidentRoutes from './routes/incidentRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
 
 const app = express();
 
@@ -59,6 +60,7 @@ app.get('/api', (req, res) => {
       auth: '/api/auth',
       monitors: '/api/monitors',
       incidents: '/api/incidents',
+      admin: '/api/admin',
     },
   });
 });
@@ -67,6 +69,7 @@ app.get('/api', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/monitors', monitorRoutes);
 app.use('/api/incidents', incidentRoutes);
+app.use('/api/admin', adminRoutes);
 
 // 404 handler
 app.use((req, res) => {

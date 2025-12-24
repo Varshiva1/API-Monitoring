@@ -1,9 +1,8 @@
 import Incident from '../models/Incident.js';
 import Monitor from '../models/Monitor.js';
 
-// @desc    Get all incidents
-// @route   GET /api/incidents
-// @access  Private
+//   Get all incidents
+
 export const getIncidents = async (req, res, next) => {
   try {
     const { status, monitorId, limit = 50, days } = req.query;
@@ -64,9 +63,8 @@ export const getIncidents = async (req, res, next) => {
   }
 };
 
-// @desc    Get single incident
-// @route   GET /api/incidents/:id
-// @access  Private
+//  Get single incident
+
 export const getIncident = async (req, res, next) => {
   try {
     const incident = await Incident.findById(req.params.id)
@@ -97,9 +95,8 @@ export const getIncident = async (req, res, next) => {
   }
 };
 
-// @desc    Acknowledge incident
-// @route   POST /api/incidents/:id/acknowledge
-// @access  Private
+//   Acknowledge incident
+
 export const acknowledgeIncident = async (req, res, next) => {
   try {
     const incident = await Incident.findById(req.params.id)
@@ -140,9 +137,8 @@ export const acknowledgeIncident = async (req, res, next) => {
   }
 };
 
-// @desc    Resolve incident
-// @route   POST /api/incidents/:id/resolve
-// @access  Private
+//    Resolve incident
+
 export const resolveIncident = async (req, res, next) => {
   try {
     const incident = await Incident.findById(req.params.id)
