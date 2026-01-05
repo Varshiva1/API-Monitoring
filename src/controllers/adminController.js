@@ -116,10 +116,21 @@ export const updateUserRole = async (req, res, next) => {
       data: user,
       message: `User role updated to ${role}`,
     });
+    // Remove password from response
+    // const userResponse = user.toObject();
+    // delete userResponse.password;
+
+    res.status(200).json({
+      success: true,
+      // data: userResponse,
+      message: `User role updated to ${role}`,
+    });
+    
   } catch (error) {
     next(error);
   }
 };
+
 
 //  Get all monitors (admin can see all users' monitors)
 
